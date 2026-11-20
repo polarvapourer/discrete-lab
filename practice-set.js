@@ -18,12 +18,22 @@ let linked=false;
 if(params.get('gen')===String(VERSION)){const c={subject:params.get('topic'),level:params.get('level'),count:Number(params.get('n')),seed:params.get('seed')};if(configOK(c)){load(c,(Number(params.get('q'))||1)-1);linked=true;}}
 if(!cfg){const c=saved(prefix+'-last');if(configOK(c))load(c);}
 export const hasSharedSet=linked||params.get('generator')==='1';
+
+export function openGeneratorSetup(){
+ stopPlayback();
+ setup=true;
+ formDraft=null;
+ pending=null;
+ notice='';
+}
+
+if(!linked && params.get('generator')==='1')openGeneratorSetup();
 function shareURL(at){const u=new URL(location.href);u.search='';u.hash='';for(const [k,v] of Object.entries({gen:VERSION,topic:cfg.subject,level:cfg.level,n:cfg.count,seed:cfg.seed,q:at+1}))u.searchParams.set(k,v);return u.href;}
 function syncUrl(){if(cfg)history.replaceState(null,'',shareURL(index));}
 function nativeSeed(){return Array.from(crypto.getRandomValues(new Uint32Array(2)),x=>x.toString(36)).join('-');}
 function optionList(values,v){return values.map(x=>'<option '+(x===v?'selected':'')+'>'+esc(x)+'</option>').join('');}
 function form(){const d=formDraft??(cfg?{...cfg,seed:''}:defaultConfig);
- return `<form id="generatorForm" class="generatorform"><h2>Generate a practice set</h2><p class="prompt">Choose what to practise. Leave the seed blank for a fresh set.</p><div class="formgrid"><label>Topic<select name="subject">${optionList(['Mixed revision',...subjects],d.subject)}</select></label><label>Difficulty<select name="level">${optionList(['Mixed difficulty',...levels],d.level)}</select></label><label>Number of questions<input required type="number" name="count" value="${esc(d.count)}" min="1" max="100" step="1"></label><label>Seed <span>(optional)</span><input name="seed" maxlength="64" value="${esc(d.seed)}" placeholder="Random"></label></div><div class="actions"><button class="primary" type="submit">Generate questions</button>${cfg?'<button type="button" class="secondary" data-gen="cancelsetup">Back to my set</button>':''}</div></form>`;}
+ return `<form id="generatorForm" class="generatorform"><h2 tabindex="-1" id="generatorTitle">Generate a practice set</h2><p class="prompt">Choose what to practise. Leave the seed blank for a fresh set.</p><div class="formgrid"><label>Topic<select name="subject">${optionList(['Mixed revision',...subjects],d.subject)}</select></label><label>Difficulty<select name="level">${optionList(['Mixed difficulty',...levels],d.level)}</select></label><label>Number of questions<input required type="number" name="count" value="${esc(d.count)}" min="1" max="100" step="1"></label><label>Seed <span>(optional)</span><input name="seed" maxlength="64" value="${esc(d.seed)}" placeholder="Random"></label></div><div class="actions"><button class="primary" type="submit">Generate questions</button>${cfg?'<button type="button" class="secondary" data-gen="cancelsetup">Back to my set</button>':''}</div></form>`;}
 function navigation(){return `<div class="library genlist"><div class="libhead"><h3>Your questions</h3><small>${attempts.filter(a=>a.solved).length} / ${deck.length} solved</small></div><div class="listbody">${deck.map((q,i)=>`<button class="qrow ${i===index?'active':''}" data-jump="${i}"><span class="qnum">${i+1}</span>${esc(q.title)}<span class="qstate" aria-label="${attempts[i].solved?'solved':'unsolved'}">${attempts[i].solved?'✓':'○'}</span></button>`).join('')}</div></div>`;}
 function model(q,a){if(!a.open)return '';return `<section class="model"><span class="smallcap">Model solution · ${a.steps} / ${q.steps.length}</span><ol>${q.steps.slice(0,a.steps).map(s=>'<li>'+esc(s)+'</li>').join('')}</ol><div class="actions"><button class="secondary" data-gen="backstep" ${a.steps<=1?'disabled':''}>Previous step</button><button class="secondary" data-gen="step" ${a.steps>=q.steps.length?'disabled':''}>Next step</button><button class="ghost" data-gen="play" ${!playing&&a.steps>=q.steps.length?'disabled':''}>${playing?'Pause':'Play'}</button><button class="ghost" data-gen="restart">Restart</button><button class="ghost" data-gen="full">Show all steps</button></div></section>`;}
 function question(){const q=deck[index],a=attempts[index],picked=a.picks.map(Number).filter(Number.isFinite);
@@ -32,11 +42,24 @@ function question(){const q=deck[index],a=attempts[index],picked=a.picks.map(Num
 export function generatorView(redraw){
  refresh=redraw;
  if(!cfg||setup){const confirm=pending?`<div class="message">Open the new set? Your current set can be reopened with its seed.<div class="actions"><button class="primary" data-gen="confirm">Open new set</button><button class="secondary" data-gen="keep">Keep working</button></div></div>`:'';
- return '<div class="workspace"><div class="panel"><div class="panelhead"><span class="kicker">'+icon('pencil')+' Question generator</span></div><div class="panelbody">'+form()+confirm+'</div></div><aside class="notes"><div class="notetitle">'+icon('book')+' How it works</div><h3>Mixed revision</h3><p>Topics rotate across sets, relations, functions and graphs. Mixed difficulty starts with shorter questions and moves on to ones with more steps.</p><h3>Practise together</h3><p>Share a seed and settings to get the same questions. Each student keeps their own answers and progress in their browser.</p></aside></div>';}
+ return '<div class="workspace"><div class="panel"><div class="panelhead"><span class="kicker">'+icon('pencil')+' Question generator</span></div><div class="panelbody">'+form()+confirm+(notice?'<p class="message" role="alert">'+esc(notice)+'</p>':'')+'</div></div><aside class="notes"><div class="notetitle">'+icon('book')+' How it works</div><h3>Mixed revision</h3><p>Topics rotate across sets, relations, functions and graphs. Mixed difficulty starts with shorter questions and moves on to ones with more steps.</p><h3>Practise together</h3><p>Share a seed and settings to get the same questions. Each student keeps their own answers and progress in their browser.</p></aside></div>';}
  return `<div class="sectionhead"><h2>Generated practice</h2><button class="secondary" data-gen="setup">Generate another set</button></div><div class="workspace">${question()}<aside><div class="notes"><div class="notetitle">${icon('book')} Practice set</div><p style="margin-top:12px">${esc(cfg.subject)} · ${esc(cfg.level)}</p><p class="seed">Seed <code>${esc(cfg.seed)}</code></p><div class="switcher"><button data-gen="share">Copy question link</button><button data-gen="shareset">Copy set link</button></div><div class="switcher"><button data-gen="print">Print questions</button><button data-gen="answers">Print solutions</button></div><p id="shareStatus" aria-live="polite">${esc(notice)}</p></div>${navigation()}</aside></div>`;
 }
 function jump(i){stopPlayback();index=i;notice='';save();syncUrl();refresh();document.getElementById('genQuestion')?.focus({preventScroll:true});document.getElementById('genQuestion')?.scrollIntoView({block:'nearest'});}
-function accept(c){load(c,0);syncUrl();refresh();}
+function accept(c){
+ try { load(c,0); }
+ catch(error){
+  pending=null;
+  setup=true;
+  formDraft=c;
+  notice=error.message || 'The set could not be generated. Try another seed.';
+  refresh();
+  return;
+ }
+ syncUrl();
+ refresh();
+ document.getElementById('genQuestion')?.focus({preventScroll:true});
+}
 function togglePick(v){const a=attempts[index];if(a.picks.includes(v))a.picks=a.picks.filter(k=>k!==v);else if(v==='∅')a.picks=['∅'];else a.picks=[...a.picks.filter(x=>x!=='∅'),v];a.feedback='';}
 function check(){const q=deck[index],a=attempts[index];let correct=false;
  if(q.type==='number'){
@@ -63,7 +86,7 @@ export function wireGenerator(root){
  if(b.hasAttribute('data-gpick')){togglePick(b.dataset.gpick);save();refresh();root.querySelector('[data-gpick="'+b.dataset.gpick+'"]').focus({preventScroll:true});return;}
  const k=b.dataset.gen;if(!k)return;const a=attempts[index],q=deck[index];if(k!=='play')stopPlayback();
  if(k==='setup'){setup=true;formDraft=null;pending=null;}
- else if(k==='keep'||k==='cancelsetup'){setup=false;pending=null;}
+ else if(k==='keep'||k==='cancelsetup'){setup=false;pending=null;notice='';syncUrl();}
  else if(k==='confirm'){accept(pending);return;}
  else if(k==='prev'||k==='next'){jump(index+(k==='next'?1:-1));return;}
  else if(k==='check')check();

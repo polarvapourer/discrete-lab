@@ -1,4 +1,4 @@
-import {wireGenerator,generatorView,hasSharedSet,stopPlayback} from './practice-set.js';
+import {wireGenerator,generatorView,openGeneratorSetup,hasSharedSet,stopPlayback} from './practice-set.js?v=generator-nav-2';
 import {topics} from './lessons.js';
 import {esc,icon,figure} from './diagrams.js';
 import {explore,changeExplore} from './explore.js';
@@ -68,6 +68,16 @@ app.addEventListener('click',e=>{
 app.addEventListener('change',e=>{const c=e.target;if(!c.dataset.field)return;changeExplore(c.dataset.field,c.value,c.checked);const s='[data-field="'+c.dataset.field+'"]'+(c.type==='checkbox'&&c.hasAttribute('value')?'[value="'+c.value+'"]':'');render(s);});
 $('progress').onclick=progress;$('close').onclick=()=>modal.close();modal.addEventListener('click',e=>{if(e.target===modal&&!(e.clientX>=modal.getBoundingClientRect().left&&e.clientX<=modal.getBoundingClientRect().right&&e.clientY>=modal.getBoundingClientRect().top&&e.clientY<=modal.getBoundingClientRect().bottom))modal.close();});
 wireGenerator(app);
-$('generate').onclick=()=>{page='generator';render();};
+$('generate').addEventListener('click',event=>{
+ if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+ openGeneratorSetup();
+ page='generator';
+ render();
+ const target=event.currentTarget.href;
+ if(location.href!==target)history.pushState(null,'',target);
+ $('generatorTitle').focus();
+ event.preventDefault();
+});
+window.addEventListener('popstate',()=>location.reload());
 $('guide').onclick=()=>{clearSharedURL();page='guide';render();};$('practice').onclick=openWorkspace;
 render();
