@@ -12,6 +12,14 @@ Open the [question generator](https://polarvapourer.github.io/discrete-lab/?gene
 
 You can type numerical answers, select elements, check partial attempts and reveal solutions one step at a time. Moving between questions or refreshing keeps your saved answers on this browser. Use **Copy question link** or **Copy set link** to share the same questions without sharing answers or progress. Printing questions and printing worked solutions produce separate sheets.
 
+## Paper practice
+
+[Open Paper practice](https://polarvapourer.github.io/discrete-lab/paper.html) for written questions on sets, relations, functions and graphs. Build a mixed or single-topic paper from 16 original questions based on the Week 8 and 9 material. Questions ask for diagrams, working, proofs or counterexamples. This is a student revision resource.
+
+Use the **Guided mode** checkbox in untimed practice, the Workspace exercises or a generated practice set for an automatic starting prompt. Paper practice and generated sets offer further hints. In **Timed** practice, the timer runs while you work on paper. Use **Finish and review** when you are ready to reveal solutions. The worked mark scheme can be opened one step at a time and checked against your written answer. Each full solution includes a common mistake to watch for and a follow-up problem. **Review progress** lists your self-awarded marks by topic and shows which questions need another attempt. Progress is saved in the current browser.
+
+Print the question paper and worked mark scheme separately for offline practice. **Copy paper link** shares the same questions in the same order so students can compare methods after working independently. **Save paper file** downloads the question selection as JSON. **Open saved paper** restores that selection for a fresh attempt.
+
 ## Run locally
 
 From the repository root, run `python -m http.server 8000` and open `http://localhost:8000/`. GitHub Pages serves the same files directly. No dependencies or build step are needed.

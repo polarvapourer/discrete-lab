@@ -1,0 +1,58 @@
+.paper-hero{margin:29px 0 21px;padding:27px 33px;border-radius:13px;background:#183f34;color:#fff}
+.paper-hero h1{font:normal clamp(36px,5vw,56px)/1.1 var(--serif);margin:0 0 8px;letter-spacing:-1.6px}
+.paper-hero p{max-width:680px;margin:0;color:#e6eee4;line-height:1.55}
+.paper-layout{margin-bottom:25px}
+.paper-page h2,.paper-page h3{font-family:var(--serif);font-weight:400}
+.paper-page h2{color:var(--ink);font-size:32px;margin:0 0 14px;letter-spacing:-.8px}
+.paper-page h3{font-size:22px;margin:20px 0 8px}
+.paper-page p{line-height:1.55}
+.paper-page label,.paper-page button,.paper-sidebar button{font-size:15px}
+.paper-page .prompt{max-width:68ch}
+.paper-panelhead{gap:10px;flex-wrap:wrap}
+.paper-status{font-size:14px;font-weight:600;color:var(--green)}
+.paper-form{display:grid;gap:18px;max-width:540px}
+.paper-form label{display:block;font-weight:600}
+.paper-form select,.paper-form input[type=number]{display:block;width:100%;max-width:290px;margin-top:6px;border:1px solid #adc0ad;border-radius:6px;background:#fff;color:var(--ink);font:inherit;padding:9px}
+.paper-form .actions{margin-top:0}
+.paper-sidebar .library:first-child{margin-top:0}
+.paper-sidebar .qrow[aria-current=true]{background:#e7f1e6;color:var(--green);font-weight:700}
+.paper-given{padding:12px 15px;background:#f2f5ee;border:1px solid #d7e0d4;border-radius:8px}
+.paper-given p{margin:0 0 4px;line-height:1.55}
+.paper-given p:last-child{margin-bottom:0}
+.paper-tasks{padding-left:1.65rem;line-height:1.6}
+.paper-tasks li{padding-left:4px;margin:7px 0}
+.paper-marklist{padding-left:1.6rem;line-height:1.55}
+.paper-marklist li{margin:10px 0}
+.paper-marklist label{display:flex;gap:9px;align-items:baseline}
+.paper-marklist input{accent-color:#204b3e;flex:none}
+.paper-print-marks{float:right;font-weight:400;font-size:14px;margin-left:12px}
+.paper-keys{font-size:13px;color:var(--muted)}
+.paper-hint ol{margin:7px 0 0;padding-left:22px}
+.paper-header-actions{margin:0 0 16px}
+.paper-layout .notes{margin-top:16px}
+#paperApp{padding-bottom:25px}
+#paperPrint{display:none}
+@media(max-width:600px){.paper-hero{margin-top:16px;padding:21px}.paper-page h2{font-size:28px}.paper-layout .notes{margin-top:10px}}
+@media print{
+ @page{size:A4;margin:15mm}
+ body.paper-print header,body.paper-print #paperApp{display:none!important}
+ body.paper-print #paperPrint:not([hidden]){display:block;color:#111;font:11pt/1.45 Arial,sans-serif}
+ #paperPrint h1{font-size:20pt;margin:.1em 0}
+ #paperPrint h2{font-size:13pt;margin:0 0 6px}
+ #paperPrint article{break-inside:avoid;margin:0 0 8mm}
+ #paperPrint .paper-given{padding:7px;border-color:#bbb;background:#fff}
+ #paperPrint .paper-tasks{margin:6px 0}
+ #paperPrint .writing-line{height:9mm;border-bottom:1px solid #ccc}
+}
+.paper-form [hidden]{display:none}
+.paper-diagram{margin:14px 0}
+.paper-diagram svg{width:min(100%,360px);height:auto;display:block}
+.paper-diagram figcaption{font-size:14px;margin-top:6px;color:var(--muted)}
+.paper-feedback h3:first-child{margin-top:0}
+.paper-review-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:14px;margin-bottom:18px}
+.paper-review-group{border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.paper-review-group h3,.paper-review-group p{margin:12px 14px}
+.paper-review-group ul{list-style:none;margin:0;padding:0}
+.paper-review-group .qstate{font-size:12px;text-align:right}
+
+@media print{#paperPrint .paper-diagram svg{max-height:42mm}#paperPrint .paper-diagram figcaption{font-size:10pt}}

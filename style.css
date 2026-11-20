@@ -9,3 +9,7 @@
 @media print{body:has(#printset)>:not(#printset){display:none!important}#printset{display:block;color:#111;font:12pt Georgia,serif}#printset article{break-inside:avoid;margin:20px 0}#printset h1{font-size:22pt}#printset h2{font-size:16pt}#printset .board{max-width:550px}#printset .fig{height:125px}#printset .mathcard{padding:12px;font-size:16pt}#printset .boardtop{padding-top:5px}#printset .legend{font-size:10pt}#printset .mat td,#printset .mat th{padding:2px 8px}}
 
 nav a { display: inline-flex; align-items: center; text-decoration: none; }
+.practice-controls{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:8px 16px}
+.guided-toggle{font-size:14px;white-space:nowrap;color:var(--green)}
+.guided-toggle input{accent-color:var(--green)}
+@media(max-width:410px){.top nav{gap:12px}.top nav :is(button,a){font-size:12px}}
