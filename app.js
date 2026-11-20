@@ -1,5 +1,5 @@
 import {guidanceCheckbox, guidanceEnabled, saveGuidance} from './guided.js';
-import {wireGenerator,generatorView,openGeneratorSetup,hasSharedSet,stopPlayback} from './practice-set.js?v=paper-practice-1';
+import {wireGenerator,generatorView,openGeneratorSetup,hasSharedSet,stopPlayback} from './practice-set.js?v=generator-guided-1';
 import {topics} from './lessons.js';
 import {esc,icon,figure} from './diagrams.js';
 import {explore,changeExplore} from './explore.js';
@@ -72,7 +72,8 @@ app.addEventListener('change',e=>{const c=e.target;
  if(c.hasAttribute('data-guided')){
   guided=c.checked;
   saveGuidance(guided);
-  render('[data-guided]');
+  // Keep the topic, count and seed currently typed into the setup form.
+  if(c.form?.id!=='generatorForm')render('[data-guided]');
   return;
  }
  if(!c.dataset.field)return;changeExplore(c.dataset.field,c.value,c.checked);const s='[data-field="'+c.dataset.field+'"]'+(c.type==='checkbox'&&c.hasAttribute('value')?'[value="'+c.value+'"]':'');render(s);});
