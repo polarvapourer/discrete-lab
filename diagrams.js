@@ -45,7 +45,7 @@ export function mappingFigure(values,targets){
  return board('Mapping diagram',svg('55 0 350 185',body,caption+'. Codomain: 1 to '+targets),caption);
 }
 export function graphFigure(edges,directed){
- const xy={A:[85,135],B:[135,40],C:[190,135],D:[288,84],E:[385,121]};
+ const xy={A:[80,105],B:[164,29],C:[328,46],D:[383,138],E:[204,158]};
  let body=marker;
  for(const [from,to] of edges){const [x,y]=xy[from],[a,b]=xy[to],len=Math.hypot(a-x,b-y),dx=(a-x)/len,dy=(b-y)/len;
  body+=`<line x1="${x+dx*18}" y1="${y+dy*18}" x2="${a-dx*19}" y2="${b-dy*19}" stroke="#4e745e" stroke-width="2.3" ${directed?'marker-end="url(#arrow)"':''}/>`;}
@@ -54,7 +54,7 @@ export function graphFigure(edges,directed){
  return board(directed?'Directed graph':'Undirected graph',svg('48 0 375 182',body,caption),caption);
 }
 export function figure(f,selected=[]){switch(f.type){
- case 'venn':return vennFigure(baseSets,selected,true);
+ case 'venn':return vennFigure(f.sets || baseSets,selected,true);
  case 'relation':return relationFigure(f.pairs);
  case 'mapping':return mappingFigure(f.values,f.targets);
  case 'graph':return graphFigure(f.edges,f.directed);
