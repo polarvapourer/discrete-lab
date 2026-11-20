@@ -1,8 +1,10 @@
+import {pythonPanel} from './python-panel.js';
+import {workspacePython} from './workspace-python.js';
 import {guidanceCheckbox, guidanceEnabled, saveGuidance} from './guided.js';
-import {wireGenerator,generatorView,openGeneratorSetup,hasSharedSet,stopPlayback} from './practice-set.js?v=paper-practice-1';
+import {wireGenerator,generatorView,openGeneratorSetup,hasSharedSet,stopPlayback} from './practice-set.js?v=sets-2';
 import {topics} from './lessons.js';
 import {esc,icon,figure} from './diagrams.js';
-import {explore,changeExplore} from './explore.js';
+import {explore,changeExplore} from './explore.js?v=sets-2';
 const $=id=>document.getElementById(id);
 const app=$('app'), modal=$('modal'), key='discrete-lab-progress-v1';
 let topic=0, position=topics.map(()=>0),mode='practice',page=hasSharedSet?'generator':'workspace';
@@ -30,6 +32,7 @@ function exercise(){const x=q(),a=attempt(),many=x.correct.length>1;
  <div id="feedback" aria-live="polite">${a.feedback?`<p class="message ${a.good?'good':''}">${esc(a.feedback)}</p>`:''}</div>
  ${a.hint&&!guided?'<p class="message"><b>Hint.</b> '+esc(x.hint)+'</p>':''}
  ${a.reveal?'<p class="message"><b>Worked solution.</b> '+esc(x.solution)+'</p>':''}
+ ${pythonPanel(workspacePython(x))}
  ${a.good||a.reveal?'<div class="actions"><button class="secondary" data-next>'+(position[topic]+1<t().questions.length?'Next exercise':topic+1<topics.length?'Next topic':'View progress')+'</button></div>':''}
  </div></section>`;}
 function guide(){return `<section class="guide"><div class="guidecard"><span class="smallcap">Week ${t().week} · Study guide</span><h2 style="margin:10px 0 14px">${t().heading}</h2>${t().notes.map((n,i)=>`<details ${q().note===i?'open':''}><summary>${esc(n[0])}</summary><div class="formula">${esc(n[1])}</div><p>${esc(n[2])}</p></details>`).join('')}<h3>Where to read</h3><p>${esc(t().reading)}</p><div class="actions"><button class="primary" data-work>Practise ${t().name.toLowerCase()}</button></div></div><p>For the logic part of ECS407U, use the lecturer’s <a href="https://sr123.github.io/box-proofs/">Box proofs workspace</a>.</p></section>`;}

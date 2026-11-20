@@ -1,3 +1,5 @@
+import {pythonPanel} from './python-panel.js';
+import {paperPython, proofNote} from './paper-python.js';
 import {questions, topics, modelDiagram, reviewTips, variationAnswers} from './paper-questions.js';
 import {esc} from './diagrams.js';
 
@@ -156,12 +158,17 @@ function markScheme(q, attempt) {
   </section>`;
 }
 
+function paperCheck(q, variation=false) {
+  const example = ['functions-classification','functions-inverse','functions-proof','sets-counter'].includes(q.id);
+  return pythonPanel(paperPython(q.id, variation),example ? proofNote : undefined);
+}
+
 function workedFeedback(q) {
   const [mistake, transfer] = reviewTips[q.id];
   return `<div class="notes paper-feedback">
     <h3>Watch for this</h3><p>${esc(mistake)}</p>
     <h3>Try a variation on paper</h3><p>${esc(transfer)}</p>
-    <details><summary>Check the variation</summary><p>${esc(variationAnswers[q.id])}</p></details>
+    <details><summary>Check the variation</summary><p>${esc(variationAnswers[q.id])}</p>${paperCheck(q,true)}</details>
   </div>`;
 }
 
@@ -224,7 +231,7 @@ function paperPage() {
             <button class="${attempt.done ? 'secondary' : 'primary'}" aria-pressed="${attempt.done}" data-action="done">${attempt.done ? 'Attempted on paper ✓' : 'Mark as attempted'}</button>
             ${!canReview ? '<button class="secondary" data-action="finish">Finish and review</button>' : ''}
           </div>
-          ${canReview && (attempt.done || state.reviewing) ? markScheme(q, attempt) : ''}
+          ${canReview && (attempt.done || state.reviewing) ? markScheme(q, attempt) + paperCheck(q) : ''}
           <div class="genpaging">
             <button class="secondary" data-action="prev" ${state.index === 0 ? 'disabled' : ''}>Previous question</button>
             <button class="secondary" data-action="next" ${state.index + 1 >= state.ids.length ? 'disabled' : ''}>Next question</button>

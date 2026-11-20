@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en-GB">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your own set expression · Discrete Lab</title><link rel="icon" href="./mark.svg"><link rel="stylesheet" href="./style.css?v=sets-2"><script type="module" src="./set-workspace.js"></script></head>
+<body>
+<header><div class="top wrap"><a href="./" class="brand"><img src="./mark.svg" alt="">Discrete Lab</a><div class="divider"></div><nav aria-label="Main navigation"><a href="./">Workspace</a><a href="./?generator=1">Generator</a><a href="./paper.html">Paper practice</a><a href="./sets.html" aria-current="page">Set calculator</a></nav></div></header>
+<main class="wrap">
+<section class="hero"><div class="herocopy"><div class="eyebrow">Week 8 · Sets</div><h1>Set calculator<span>.</span></h1><p>Enter your sets, try an expression and check your working.</p></div></section>
+<div class="workspace"><section class="panel"><div class="panelbody">
+<form id="setForm"><h2>Your own set expression</h2>
+<p id="membersHelp" class="prompt">Separate members with commas. Use integers or words such as <code>red</code>. Use <code>{}</code> for an empty set.</p>
+<div class="formgrid">
+<label>Set A<input name="A" value="1, 2, 3, 4" maxlength="1500"></label>
+<label>Set B<input name="B" value="3, 4, 5, 6" maxlength="1500"></label>
+<label>Set C (optional)<input name="C" placeholder="{}" maxlength="1500"></label>
+<label>Universe U (optional)<input name="U" placeholder="e.g. 1, 2, 3, 4, 5, 6, 7, 8" maxlength="1500"></label></div>
+<p>Fill in U when you use a complement or U itself. It should contain every member of your sets.</p>
+<label for="expression"><strong>Expression</strong></label>
+<input id="expression" class="set-input" name="expression" value="A n B" maxlength="200" autocomplete="off" spellcheck="false">
+<div id="symbols" class="actions" role="group" aria-label="Insert a set symbol"></div>
+<label for="myAnswer">Your answer (optional)</label><input id="myAnswer" name="answer" class="set-input" placeholder="{3, 4}" maxlength="1500">
+<div class="actions"><button class="primary" type="submit" value="check">Check my answer</button><button class="secondary" type="submit" value="solve">Show working</button></div></form>
+<p id="status" role="status"></p><div id="working"></div></div></section>
+<aside class="notes"><div class="notetitle">Set notation</div>
+<dl class="set-key"><dt>∩</dt><dd><code>A n B</code> · members in both sets</dd><dt>∪</dt><dd><code>A u B</code> · members in either set</dd><dt>∖</dt><dd><code>A - B</code> · members in A outside B</dd><dt>ᶜ</dt><dd><code>A'</code> · members of U outside A</dd><dt>△</dt><dd><code>A ^ B</code> · members in exactly one set</dd></dl>
+<h3>Try a longer expression</h3><p>In <code>A n (B u C)</code>, work out the brackets first. Complement comes next, then intersection and difference, then union and symmetric difference. Operations at the same level run from left to right.</p>
+<p>You can also enter a set directly, for example <code>A n {2, 4}</code>.</p></aside></div>
+<noscript><p>Enable JavaScript to work out set expressions.</p></noscript>
+<footer><span>Discrete Lab</span><span>ECS407U · Logic and Discrete Structures</span></footer></main></body></html>

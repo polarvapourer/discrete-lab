@@ -20,6 +20,12 @@ Use the **Guided mode** checkbox in untimed practice, the Workspace exercises or
 
 Print the question paper and worked mark scheme separately for offline practice. **Copy paper link** shares the same questions in the same order so students can compare methods after working independently. **Save paper file** downloads the question selection as JSON. **Open saved paper** restores that selection for a fresh attempt.
 
+## Set calculator and Python checks
+
+[Open the set calculator](https://polarvapourer.github.io/discrete-lab/sets.html) to enter your own sets and expressions. For example, with A = {1, 2, 3} and B = {2, 4}, type `A n B` to find {2}. You can check a handwritten answer or reveal the intermediate sets. The calculator accepts union, intersection, difference, complement, symmetric difference and parentheses. Specify U to define the universe for complements.
+
+Open **Check in Python** to copy a standalone Python 3 script for the current inputs. Checks are available in the calculator, Workspace, Explore, generated practice and paper review. In an untimed paper, mark the question as attempted to open its check. In a timed paper, finish the attempt first. For general proof questions, use the example computations alongside your written argument.
+
 ## Run locally
 
 From the repository root, run `python -m http.server 8000` and open `http://localhost:8000/`. GitHub Pages serves the same files directly. No dependencies or build step are needed.

@@ -13,3 +13,18 @@ nav a { display: inline-flex; align-items: center; text-decoration: none; }
 .guided-toggle{font-size:14px;white-space:nowrap;color:var(--green)}
 .guided-toggle input{accent-color:var(--green)}
 @media(max-width:410px){.top nav{gap:12px}.top nav :is(button,a){font-size:12px}}
+
+.top nav {flex-wrap:wrap}
+.set-input {display:block;margin:.4rem 0 1rem;width:100%;padding:.65rem;border:1px solid #a3b3a5;border-radius:6px;font:1rem var(--mono)}
+.set-key {display:grid;grid-template-columns:max-content 1fr;gap:.65rem 1rem;line-height:1.5}
+.set-key dt {font-weight:bold}.set-key dd {margin:0}
+#symbols {gap:.4rem;margin-bottom:1rem}
+#symbols button {font-size:1.1rem;min-width:2.3rem;min-height:2.3rem}
+#setForm p,.set-steps,.python-panel {line-height:1.55}
+#status:not(:empty){background:#edf4ed;padding:.75rem 1rem;border-left:3px solid var(--green);overflow-wrap:anywhere}
+.python-panel {margin:1rem 0;padding:.8rem 1rem;border:1px solid var(--rule);border-radius:8px}
+.python-panel summary {font-weight:650;color:var(--green);cursor:pointer}
+.python-panel pre {background:#f2f5ef;padding:.8rem;overflow:auto;line-height:1.5;font-size:.9rem}
+.python-panel li+li,.set-steps li+li {margin-top:.45rem}
+.workspace > *{min-width:0}
+@media(max-width:600px){.top nav{column-gap:13px}}

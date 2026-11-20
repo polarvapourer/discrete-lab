@@ -1,3 +1,8 @@
+import {setProblem} from './set-expression.js';
+import {setLink, relationCode, graphCode} from './python-maths.js';
+import {mappingCode} from './workspace-python.js';
+import {relationProperties} from './paper-python.js';
+import {pythonPanel} from './python-panel.js';
 import {universe,baseSets,vennFigure,relationFigure,mappingFigure,graphFigure,fmt} from './diagrams.js';
 const ops=['A ∩ B','A ∪ B','A ∖ B','B ∖ A','Aᶜ'];
 const state={A:[...baseSets.A],B:[...baseSets.B],op:0,pairs:['11','22','33','12','23'],values:[1,1,2],targets:3,edges:['AB','BC','CA','CD','DE'],directed:false};
@@ -24,27 +29,34 @@ function calcGraph(){
  return (connected?'Connected.':'Disconnected.')+' '+state.edges.length+' edges and 5 vertices. '+(connected&&state.edges.length===4?'This graph is a tree.':'A tree here needs one connected component and exactly 4 edges.');
 }
 export function explore(topic){
+ let python, calculator='';
  let body='', controls='', result='',title='',prompt='';
  if(topic===0){
  title='Build your own sets';prompt='Change the members of A and B. The diagram highlights the result of your operation.';
  const tests=[(a,b)=>a&&b,(a,b)=>a||b,(a,b)=>a&&!b,(a,b)=>b&&!a,a=>!a];
  const xs=universe.filter(n=>tests[state.op](state.A.includes(n),state.B.includes(n)));
+ const sets={A:state.A.join(','),B:state.B.join(','),U:universe.join(',')};
+ python=setProblem(sets,ops[state.op]).code;
+ calculator='<p><a href="'+setLink(sets,ops[state.op])+'">Enter your own expression with these sets</a></p>';
  body=vennFigure(state,xs);controls=['A','B'].map(k=>fields('Members of '+k,universe.map(n=>check(k,n,state[k].includes(n))).join(''))).join('')+'<label>Operation '+pick('op',ops,state.op)+'</label>';result=ops[state.op]+' = '+fmt(xs);
  }else if(topic===1){
  title='Build a relation';prompt='Toggle ordered pairs in the matrix. Watch which properties change and find the pair responsible.';body=relationFigure(state.pairs,true);
+ python=relationCode(state.pairs,'X = range(1, 4)\n'+relationProperties);
  result=Object.entries(analyseRelation(state.pairs)).map(([k,v])=>'<div><strong>'+k+'</strong> · '+v+'</div>').join('');
  }else if(topic===2){
  title='Rewire a function';prompt='Choose one output for each input. Look for shared targets and targets with no incoming arrow.';
  body=mappingFigure(state.values,state.targets);
  controls=fields('Arrow destinations',state.values.map((v,i)=>'<label>'+['a','b','c'][i]+' maps to '+pick('map'+i,[1,2,3],v-1)+'</label>').join(''));
+ python=mappingCode(state.values,state.targets);
  const unique=new Set(state.values),missing=[1,2,3].filter(i=>!unique.has(i));
  const duplicate=state.values.find((v,i)=>state.values.indexOf(v)!==i);
  result=duplicate?'Image = '+fmt([...unique].sort())+'. Inputs '+['a','b','c'].filter((_,i)=>state.values[i]===duplicate).join(' and ')+' share target '+duplicate+'. '+missing.join(', ')+' unvisited. This function is neither injective nor surjective.':'Each target receives exactly one arrow. This function is bijective.';
  }else{
  title='Build a graph';prompt='Add or remove edges and switch their direction on. See how the connections change.';
  body=graphFigure(state.edges,state.directed);controls='<label><input type="checkbox" data-field="directed" '+(state.directed?'checked':'')+'> Use directed edges (first vertex to second)</label>'+fields('Edges',graphOptions.map(e=>check('edges',e,state.edges.includes(e))).join(''));result=calcGraph();
+ python=graphCode(state.edges,state.directed?'print(reachable("A", edges, directed=True))':'connected = len(reachable("A", edges)) == 5\nprint("Connected:", connected)\nprint("Tree:", connected and len(edges) == 4)',true);
  }
- return '<section class="panel explore"><div class="panelhead"><span class="kicker">Exploration</span></div><div class="panelbody"><h2>'+title+'</h2><p class="prompt">'+prompt+'</p>'+body+controls+'<output aria-live="polite" class="message good">'+result+'</output></div></section>';
+ return '<section class="panel explore"><div class="panelhead"><span class="kicker">Exploration</span></div><div class="panelbody"><h2>'+title+'</h2><p class="prompt">'+prompt+'</p>'+body+controls+'<output aria-live="polite" class="message good">'+result+'</output>'+calculator+pythonPanel(python)+'</div></section>';
 }
 function toggle(list,value){return list.includes(value)?list.filter(v=>v!==value):[...list,value];}
 export function changeExplore(field,value,checked){
