@@ -32,4 +32,4 @@ From the repository root, run `python -m http.server 8000` and open `http://loca
 
 ## Course references
 
-The exercises follow the topics and conventions in Søren Riis’s ECS407U Week 8 and 9 handouts, lab sheets and lecture notes, the supplied revision notes, Schaum’s *Outline of Discrete Mathematics* (Lipschutz and Lipson), and David Liben-Nowell’s *Discrete Mathematics for Computer Science*, §2.3. The guided practice format was inspired by the lecturer’s [Box proofs](https://sr123.github.io/box-proofs/) app. This is an independent student project.
+The exercises follow the topics and conventions in Søren Riis’s ECS407U Week 8 and 9 handouts, lab sheets and lecture notes, Schaum’s *Outline of Discrete Mathematics* (Lipschutz and Lipson), and David Liben-Nowell’s *Discrete Mathematics for Computer Science*, §2.3. The guided practice format was inspired by the lecturer’s [Box proofs](https://sr123.github.io/box-proofs/) app. This is an independent student project.
