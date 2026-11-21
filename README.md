@@ -12,6 +12,10 @@ Open the [question generator](https://polarvapourer.github.io/discrete-lab/?gene
 
 You can type numerical answers, select elements, check partial attempts and reveal solutions one step at a time. Moving between questions or refreshing keeps your saved answers on this browser. Use **Copy question link** or **Copy set link** to share the same questions without sharing answers or progress. Printing questions and printing worked solutions produce separate sheets.
 
+## End-of-term practice
+
+Open the [Term test tab](https://polarvapourer.github.io/discrete-lab/term-test.html) and choose **Generate practice paper**. Each paper contains 14 logic and six discrete structures questions. Select answers online, flag questions and return to them before submitting. The default time limit is 50 minutes and can be adjusted for approved extra time. The current paper and deadline are saved in the browser. Submitting or running out of time opens the score, explanations and lecture reading for each question. Generate a new paper from the review screen.
+
 ## Paper practice
 
 [Open Paper practice](https://polarvapourer.github.io/discrete-lab/paper.html) for written questions on sets, relations, functions and graphs. Build a mixed or single-topic paper from 16 original questions based on the Week 8 and 9 material. Questions ask for diagrams, working, proofs or counterexamples. This is a student revision resource.
