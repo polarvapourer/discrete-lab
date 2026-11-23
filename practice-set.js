@@ -6,20 +6,43 @@ const prefix='discrete-generated-v'+VERSION;
 const saved=(k)=>{try{return JSON.parse(localStorage.getItem(k));}catch{return null;}};
 const persist=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
 const configKey=c=>JSON.stringify([c.subject,c.level,c.count,c.seed]);
-const blank=()=>({picks:[],input:'',solved:false,feedback:'',hint:false,steps:0,open:false});
+function restoreAttempt(question, saved){
+ const choices=question.choices??[];
+ return {
+  picks:Array.isArray(saved?.picks)?choices.filter(choice=>saved.picks.includes(choice)):[],
+  input:typeof saved?.input==='string'?saved.input:'',
+  solved:saved?.solved===true,
+  feedback:typeof saved?.feedback==='string'?saved.feedback:'',
+  hint:saved?.hint===true,
+  steps:Number.isInteger(saved?.steps)?Math.max(0,Math.min(question.steps.length,saved.steps)):0,
+  open:saved?.open===true,
+ };
+}
 let cfg, deck=[],index=0,attempts=[],setup=false,notice='',pending=null,playing=null,formDraft=null;
 let refresh=()=>{};
 export const stopPlayback=()=>{if(playing)clearInterval(playing);playing=null;};
 function save(){if(cfg)persist(prefix+configKey(cfg),{index,attempts});}
 function load(c,position){
  const generated=generate(c),old=saved(prefix+configKey(c));
- stopPlayback();cfg=c;deck=generated;attempts=deck.map((_,i)=>({...blank(),...old?.attempts?.[i]}));index=Math.max(0,Math.min(deck.length-1,Number.isInteger(position)?position:old?.index||0));setup=false;pending=null;notice='';formDraft=null;persist(prefix+'-last',c);save();
+ stopPlayback();cfg=c;deck=generated;attempts=deck.map((question,i)=>restoreAttempt(question,old?.attempts?.[i]));index=Math.max(0,Math.min(deck.length-1,Number.isInteger(position)?position:Number.isInteger(old?.index)?old.index:0));setup=false;pending=null;notice='';formDraft=null;persist(prefix+'-last',c);save();
 }
 const params=new URLSearchParams(location.search);
 let linked=false;
-if(params.get('gen')===String(VERSION)){const c={subject:params.get('topic'),level:params.get('level'),count:Number(params.get('n')),seed:params.get('seed')};if(configOK(c)){load(c,(Number(params.get('q'))||1)-1);linked=true;}}
-if(!cfg){const c=saved(prefix+'-last');if(configOK(c))load(c);}
-export const hasSharedSet=linked||params.get('generator')==='1';
+if(params.get('gen')===String(VERSION)){
+ const c={subject:params.get('topic'),level:params.get('level'),count:Number(params.get('n')),seed:params.get('seed')};
+ if(configOK(c)){
+  try { load(c,(Number(params.get('q'))||1)-1);linked=true; }
+  catch { notice='This link could not generate a practice set. Try a different seed or fewer questions.';setup=true; }
+ }
+}
+if(!cfg&&!setup){
+ const c=saved(prefix+'-last');
+ if(configOK(c)){
+  try { load(c); }
+  catch { notice='The saved practice set could not be restored. Generate a new set to continue.'; }
+ }
+}
+export const hasSharedSet=linked||setup||params.get('generator')==='1';
 
 export function openGeneratorSetup(){
  stopPlayback();
@@ -29,7 +52,7 @@ export function openGeneratorSetup(){
  notice='';
 }
 
-if(!linked && params.get('generator')==='1')openGeneratorSetup();
+if(!linked && !setup && params.get('generator')==='1')openGeneratorSetup();
 function shareURL(at){const u=new URL(location.href);u.search='';u.hash='';for(const [k,v] of Object.entries({gen:VERSION,topic:cfg.subject,level:cfg.level,n:cfg.count,seed:cfg.seed,q:at+1}))u.searchParams.set(k,v);return u.href;}
 function syncUrl(){if(cfg)history.replaceState(null,'',shareURL(index));}
 function nativeSeed(){return Array.from(crypto.getRandomValues(new Uint32Array(2)),x=>x.toString(36)).join('-');}
@@ -47,7 +70,7 @@ export function generatorView(redraw, guided=guidanceEnabled()){
  refresh=redraw;
  if(!cfg||setup){const confirm=pending?`<div class="message">Open the new set? Your current set can be reopened with its seed.<div class="actions"><button class="primary" data-gen="confirm">Open new set</button><button class="secondary" data-gen="keep">Keep working</button></div></div>`:'';
  return '<div class="workspace"><div class="panel"><div class="panelhead"><span class="kicker">'+icon('pencil')+' Question generator</span></div><div class="panelbody">'+form()+confirm+(notice?'<p class="message" role="alert">'+esc(notice)+'</p>':'')+'</div></div><aside class="notes"><div class="notetitle">'+icon('book')+' How it works</div><h3>Mixed revision</h3><p>Topics rotate across sets, relations, functions and graphs. Mixed difficulty starts with shorter questions and moves on to ones with more steps.</p><h3>Practise together</h3><p>Share a seed and settings to get the same questions. Each student keeps their own answers and progress in their browser.</p></aside></div>';}
- return `<div class="sectionhead"><h2>Generated practice</h2><button class="secondary" data-gen="setup">Generate another set</button></div><div class="workspace">${question(guided)}<aside><div class="notes"><div class="notetitle">${icon('book')} Practice set</div><p style="margin-top:12px">${esc(cfg.subject)} · ${esc(cfg.level)}</p><p class="seed">Seed <code>${esc(cfg.seed)}</code></p><div class="switcher"><button data-gen="share">Copy question link</button><button data-gen="shareset">Copy set link</button></div><div class="switcher"><button data-gen="print">Print questions</button><button data-gen="answers">Print solutions</button></div><p id="shareStatus" aria-live="polite">${esc(notice)}</p></div>${navigation()}</aside></div>`;
+ return `<div class="sectionhead"><h2>Generated practice</h2><button class="secondary" data-gen="setup">Generate another set</button></div><div class="workspace">${question(guided)}<aside><div class="notes"><div class="notetitle">${icon('book')} Practice set</div><p class="generator-summary">${esc(cfg.subject)} · ${esc(cfg.level)}</p><p class="seed">Seed <code>${esc(cfg.seed)}</code></p><div class="switcher"><button data-gen="share">Copy question link</button><button data-gen="shareset">Copy set link</button></div><div class="switcher"><button data-gen="print">Print questions</button><button data-gen="answers">Print solutions</button></div><p id="shareStatus" aria-live="polite">${esc(notice)}</p></div>${navigation()}</aside></div>`;
 }
 function jump(i){stopPlayback();index=i;notice='';save();syncUrl();refresh();document.getElementById('genQuestion')?.focus({preventScroll:true});document.getElementById('genQuestion')?.scrollIntoView({block:'nearest'});}
 function accept(c){

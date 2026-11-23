@@ -35,8 +35,29 @@ function readState() {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey));
     if (validIds(saved?.ids) && Number.isInteger(saved.index) && saved.index >= 0 &&
-        saved.index < saved.ids.length && saved.attempts &&
-        (!ids || saved.ids.join(',') === ids.join(','))) return saved;
+        saved.index < saved.ids.length && (!ids || saved.ids.join(',') === ids.join(','))) {
+      const timed = saved.style === 'timed';
+      if (!timed || (Number.isInteger(saved.minutes) && saved.minutes >= 1 && saved.minutes <= 180 &&
+          Number.isSafeInteger(saved.deadline) && saved.deadline > 0)) {
+        const attempts = {};
+        for (const id of saved.ids) {
+          const previous = saved.attempts?.[id];
+          if (!previous) continue;
+          const q = bank.get(id);
+          attempts[id] = {
+            done:previous.done === true,
+            hints:Number.isInteger(previous.hints) ? Math.max(0, Math.min(previous.hints, q.hints.length - 1)) : 0,
+            steps:Number.isInteger(previous.steps) ? Math.max(0, Math.min(previous.steps, q.marks.length)) : 0,
+            marks:Array.isArray(previous.marks) ? q.marks.map((_, i) => i).filter(i => previous.marks.includes(i)) : [],
+          };
+        }
+        return {
+          ids:saved.ids, index:saved.index, style:timed ? 'timed' : 'study',
+          guided:saved.guided === true, reviewing:saved.reviewing === true,
+          minutes:timed ? saved.minutes : null, deadline:timed ? saved.deadline : null, attempts,
+        };
+      }
+    }
   } catch {
     // Paper practice can run without browser storage.
   }
