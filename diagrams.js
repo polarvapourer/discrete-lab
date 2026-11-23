@@ -22,7 +22,7 @@ export function vennFigure(sets=baseSets,selected=[],interactive=false){
  function numbers(group,cx,cy){
   const cols=group.length>4?2:1,rows=Math.ceil(group.length/cols),dy=Math.min(25,75/Math.max(1,rows-1));
   return group.map((n,i)=>{const x=cx+((i%cols)-(cols-1)/2)*17,y=cy+(Math.floor(i/cols)-(rows-1)/2)*dy;
-   return (interactive?`<g data-venn="${n}" style="cursor:pointer"><circle cx="${x}" cy="${y-5}" r="12" fill="transparent"/>`:'')+(selected.includes(n)?`<circle cx="${x}" cy="${y-5}" r="10" fill="#345c43"/>`:'')+textAt(x,y,n,`font-size="16" font-family="monospace" fill="${selected.includes(n)?'#fff':'#293e30'}"`)+(interactive?'</g>':'');}).join('');
+   return (interactive?`<g data-venn="${n}"><circle cx="${x}" cy="${y-5}" r="12" fill="transparent"/>`:'')+(selected.includes(n)?`<circle cx="${x}" cy="${y-5}" r="10" fill="#345c43"/>`:'')+textAt(x,y,n,`font-size="16" font-family="monospace" fill="${selected.includes(n)?'#fff':'#293e30'}"`)+(interactive?'</g>':'');}).join('');
  }
  const caption='A = '+fmt(sets.A)+'     ·     B = '+fmt(sets.B);
  const content='<circle cx="199" cy="99" r="83" fill="#d0e4cd" fill-opacity=".88" stroke="#699572" stroke-width="1.6"/><circle cx="295" cy="99" r="83" fill="#f4dca9" fill-opacity=".7" stroke="#ae9059" stroke-width="1.6"/>'+textAt(155,45,'A','font-family="Georgia" font-size="21" font-style="italic"')+textAt(338,45,'B','font-family="Georgia" font-size="21" font-style="italic"')+textAt(53,30,'U','font-family="Georgia" font-size="19" font-style="italic"')+numbers(groups[0],182,108)+numbers(groups[1],247,108)+numbers(groups[2],313,108)+numbers(groups[3],414,104);
