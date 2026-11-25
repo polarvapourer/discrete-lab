@@ -24,7 +24,7 @@ function validIds(ids) {
 
 function newSession(ids, style='study', guided=false, minutes=null) {
   return {
-    ids, index:0, style, guided, minutes, reviewing:false, attempts:{},
+    ids:ids.map(id => bank.get(id).id), index:0, style, guided, minutes, reviewing:false, attempts:new Map(),
     deadline:style === 'timed' ? Date.now() + minutes * 60000 : null,
   };
 }
@@ -39,22 +39,22 @@ function readState() {
       const timed = saved.style === 'timed';
       if (!timed || (Number.isInteger(saved.minutes) && saved.minutes >= 1 && saved.minutes <= 180 &&
           Number.isSafeInteger(saved.deadline) && saved.deadline > 0)) {
-        const attempts = {};
+        const attempts = new Map();
         for (const id of saved.ids) {
           const previous = saved.attempts?.[id];
           if (!previous) continue;
           const q = bank.get(id);
-          attempts[id] = {
+          attempts.set(q.id, {
             done:previous.done === true,
             hints:Number.isInteger(previous.hints) ? Math.max(0, Math.min(previous.hints, q.hints.length - 1)) : 0,
             steps:Number.isInteger(previous.steps) ? Math.max(0, Math.min(previous.steps, q.marks.length)) : 0,
             marks:Array.isArray(previous.marks) ? q.marks.map((_, i) => i).filter(i => previous.marks.includes(i)) : [],
-          };
+          });
         }
         return {
-          ids:saved.ids, index:saved.index, style:timed ? 'timed' : 'study',
+          ids:saved.ids.map(id => bank.get(id).id), index:Number(saved.index), style:timed ? 'timed' : 'study',
           guided:saved.guided === true, reviewing:saved.reviewing === true,
-          minutes:timed ? saved.minutes : null, deadline:timed ? saved.deadline : null, attempts,
+          minutes:timed ? Number(saved.minutes) : null, deadline:timed ? saved.deadline : null, attempts,
         };
       }
     }
@@ -65,7 +65,7 @@ function readState() {
 }
 
 function save() {
-  try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch {
+  try { localStorage.setItem(storageKey, JSON.stringify({...state, attempts:Object.fromEntries(state.attempts)})); } catch {
     // Printing and the current attempt still work in this browser session.
   }
 }
@@ -106,9 +106,11 @@ function openPaper(session) {
 }
 
 function current() {
-  const id = state.ids[state.index];
-  const attempt = state.attempts[id] ??= {done:false, hints:0, steps:0, marks:[]};
-  return {q:bank.get(id), attempt};
+  const q = bank.get(state.ids[state.index]);
+  if (!state.attempts.has(q.id)) {
+    state.attempts.set(q.id, {done:false, hints:0, steps:0, marks:[]});
+  }
+  return {q, attempt:state.attempts.get(q.id)};
 }
 
 function options(items) {
@@ -198,8 +200,8 @@ function reviewPage() {
   for (const topic of topics) {
     const ids = state.ids.filter(id => bank.get(id).topic === topic);
     if (!ids.length) continue;
-    const checked = ids.filter(id => state.attempts[id]?.steps === bank.get(id).marks.length);
-    const earned = checked.reduce((sum, id) => sum + state.attempts[id].marks.length, 0);
+    const checked = ids.filter(id => state.attempts.get(id)?.steps === bank.get(id).marks.length);
+    const earned = checked.reduce((sum, id) => sum + state.attempts.get(id).marks.length, 0);
     const possible = checked.reduce((sum, id) => sum + bank.get(id).marks.length, 0);
     ranked.push({topic, ids, checked, earned, possible});
   }
@@ -210,7 +212,7 @@ function reviewPage() {
       <section class="paper-review-group"><h3>${esc(topic)}</h3>
       <p>${checked.length}/${ids.length} mark schemes opened fully${possible ? ' · '+earned+'/'+possible+' self-awarded marks' : ''}</p>
       <ul>${ids.map(id => {
-        const attempt = state.attempts[id];
+        const attempt = state.attempts.get(id);
         const max = bank.get(id).marks.length;
         const status = attempt?.steps === max ? (attempt.marks.length === max ? 'Try a variation' : 'Retry · '+attempt.marks.length+'/'+max) : 'Review pending';
         return `<li><button class="qrow" data-jump="${state.ids.indexOf(id)}">${esc(bank.get(id).title)}<span class="qstate">${status}</span></button></li>`;
@@ -219,7 +221,7 @@ function reviewPage() {
 }
 
 function progressLabel() {
-  const attempts = Object.values(state.attempts);
+  const attempts = Array.from(state.attempts.values());
   const completed = attempts.filter(a => a.done).length;
   const marked = attempts.reduce((total, a) => total + a.marks.length, 0);
   return {completed, marked};
@@ -237,7 +239,7 @@ function paperPage() {
       ${canReview ? '<button class="secondary" data-action="review">Review progress</button>' : ''}
       <button class="ghost" data-action="new">New paper</button>
     </div>
-    ${shareMessage ? `<p class="message good" role="status">${esc(shareMessage)}</p>` : ''}
+    ${shareMessage ? `<p id="shareMessage" class="message good" role="status"></p>` : ''}
     <div class="workspace paper-layout">
       <section class="panel paper-page">
         <div class="panelhead paper-panelhead">
@@ -262,7 +264,7 @@ function paperPage() {
       </section>
       <aside class="paper-sidebar">
         <div class="library"><div class="libhead"><h3>Your paper</h3><small id="paperScore">${completed}/${state.ids.length} attempted${canReview ? ' · '+marked+'/'+totalMarks()+' marks' : ''}</small></div>
-          ${state.ids.map((id, i) => `<button class="qrow" data-jump="${i}" aria-current="${i === state.index}"><span class="qnum">${i + 1}</span>${esc(bank.get(id).title)}<span class="qstate">${state.attempts[id]?.done ? '✓' : ''}</span></button>`).join('')}
+          ${state.ids.map((id, i) => `<button class="qrow" data-jump="${i}" aria-current="${i === state.index}"><span class="qnum">${i + 1}</span>${esc(bank.get(id).title)}<span class="qstate">${state.attempts.get(id)?.done ? '✓' : ''}</span></button>`).join('')}
         </div>
         ${state.reviewing ? '<div class="notes"><div class="notetitle">Review your paper</div><p>Compare each written answer with the worked solution and tick the marks you earned.</p></div>' : ''}
       </aside>
@@ -271,6 +273,8 @@ function paperPage() {
 
 function render(focusId) {
   view.innerHTML = setup ? setupPage() : showingReview ? reviewPage() : paperPage();
+  const status = document.getElementById('shareMessage');
+  if (status) status.textContent = shareMessage;
   updateClock();
   if (focusId) document.getElementById(focusId)?.focus();
 }
@@ -295,7 +299,7 @@ function totalMarks() {
 function printSheet(withSolutions) {
   const title = withSolutions ? 'Worked mark scheme' : 'Question paper';
   printable.innerHTML = `<h1>Discrete Lab · ${title}</h1>
-    <p>ECS407U practice · ${state.ids.length} questions · ${totalMarks()} marks${state.minutes && !withSolutions ? ' · Suggested time ' + state.minutes + ' minutes' : ''}</p>
+    <p>ECS407U practice · ${state.ids.length} questions · ${totalMarks()} marks${state.minutes && !withSolutions ? ' · Suggested time ' + Number(state.minutes) + ' minutes' : ''}</p>
     <p>${withSolutions ? 'Award one mark for each criterion met. Accept equivalent reasoning.' : 'Show your working and give reasons. Use separate paper for longer answers or diagrams.'}</p>
     ${state.ids.map((id, i) => {
       const q = bank.get(id);
@@ -357,7 +361,7 @@ function play(q, attempt) {
 }
 
 function jump(i) {
-  if (i < 0 || i >= state.ids.length) return;
+  if (!Number.isInteger(i) || i < 0 || i >= state.ids.length) return;
   stopPlayback();
   showingReview = false;
   state.index = i;
@@ -396,8 +400,9 @@ view.addEventListener('change', event => {
     render('guided');
   }
   if (control.hasAttribute('data-mark')) {
-    const {attempt} = current();
+    const {q, attempt} = current();
     const i = Number(control.dataset.mark);
+    if (!Number.isInteger(i) || i < 0 || i >= q.marks.length) return;
     attempt.marks = attempt.marks.filter(mark => mark !== i);
     if (control.checked) attempt.marks.push(i);
     save();
