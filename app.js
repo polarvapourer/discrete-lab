@@ -11,7 +11,7 @@ let topic=0, position=topics.map(()=>0),mode='practice',page=hasSharedSet?'gener
 let guided = guidanceEnabled();
 const attempts=new Map(),allIds=topics.flatMap((t,i)=>t.questions.map((_,j)=>i+'-'+j));
 let solved=new Set();
-try{const saved=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(saved))solved=new Set(saved.filter(id=>allIds.includes(id)));}catch{}
+try{const saved=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(saved))solved=new Set(saved.filter(id=>typeof id==='string'&&allIds.includes(id)));}catch{}
 const id=()=>topic+'-'+position[topic];
 const t=()=>topics[topic];
 const q=()=>t().questions[position[topic]];
@@ -35,7 +35,7 @@ function exercise(){const x=q(),a=attempt(),many=x.correct.length>1;
  ${pythonPanel(workspacePython(x))}
  ${a.good||a.reveal?'<div class="actions"><button class="secondary" data-next>'+(position[topic]+1<t().questions.length?'Next exercise':topic+1<topics.length?'Next topic':'View progress')+'</button></div>':''}
  </div></section>`;}
-function guide(){return `<section class="guide"><div class="guidecard"><span class="smallcap">Week ${t().week} · Study guide</span><h2 class="guide-heading">${t().heading}</h2>${t().notes.map((n,i)=>`<details ${q().note===i?'open':''}><summary>${esc(n[0])}</summary><div class="formula">${esc(n[1])}</div><p>${esc(n[2])}</p></details>`).join('')}<h3>Where to read</h3><p>${esc(t().reading)}</p><div class="actions"><button class="primary" data-work>Practise ${t().name.toLowerCase()}</button></div></div><p>For the logic part of ECS407U, use the lecturer’s <a href="https://sr123.github.io/box-proofs/">Box proofs workspace</a>.</p></section>`;}
+function guide(){return `<section class="guide"><div class="guidecard"><span class="smallcap">Week ${t().week} · Study guide</span><h2 class="guide-heading">${esc(t().heading)}</h2>${t().notes.map((n,i)=>`<details ${q().note===i?'open':''}><summary>${esc(n[0])}</summary><div class="formula">${esc(n[1])}</div><p>${esc(n[2])}</p></details>`).join('')}<h3>Where to read</h3><p>${esc(t().reading)}</p><div class="actions"><button class="primary" data-work>Practise ${esc(t().name.toLowerCase())}</button></div></div><p>For the logic part of ECS407U, use the lecturer’s <a href="https://sr123.github.io/box-proofs/" rel="noopener noreferrer">Box proofs workspace</a>.</p></section>`;}
 function render(focus){
  header();if(page==='generator'){app.innerHTML=generatorView(render,guided);if(focus)app.querySelector(focus)?.focus({preventScroll:true});return;}stopPlayback();app.innerHTML=tabs()+(page==='guide'?guide():`<div class="sectionhead"><h2>${t().heading}</h2><div class="minitabs" role="group" aria-label="Workspace mode">${['practice','explore'].map(k=>`<button class="${k===mode?'selected':''}" data-mode="${k}" aria-pressed="${k===mode}">${k==='practice'?'Practice':'Explore'}</button>`).join('')}</div></div><div class="workspace">${mode==='practice'?exercise():explore(topic)}<aside>${notes()}${library()}</aside></div>`);
  if(focus)app.querySelector(focus)?.focus({preventScroll:true});
@@ -56,20 +56,20 @@ function check(){const a=attempt(),x=q(),extra=a.picks.find(i=>!x.correct.includ
 }
 app.addEventListener('click',e=>{
  const diagramPick=e.target.closest('[data-venn]');
- if(diagramPick&&page!=='generator'){app.querySelector('[data-pick="'+(Number(diagramPick.dataset.venn)-1)+'"]').click();return;}
+ if(diagramPick&&page!=='generator'){app.querySelector('[data-pick="'+(Number(diagramPick.dataset.venn)-1)+'"]')?.click();return;}
  const b=e.target.closest('button');if(!b)return;
  const d=b.dataset;
- if('topic'in d){topic=Number(d.topic);render('[data-topic="'+topic+'"]');}
- else if('question'in d)goQuestion(Number(d.question));
- else if('mode'in d){mode=d.mode;render('[data-mode="'+mode+'"]');}
- else if('pick'in d){const a=attempt(),i=Number(d.pick);a.picks=a.picks.includes(i)?a.picks.filter(x=>x!==i):q().correct.length===1?[i]:[...a.picks,i];a.feedback='';a.good=false;render('[data-pick="'+i+'"]');}
+ if('topic'in d){const i=Number(d.topic);if(Number.isInteger(i)&&i>=0&&i<topics.length){topic=i;render('[data-topic="'+topic+'"]');}}
+ else if('question'in d){const i=Number(d.question);if(Number.isInteger(i)&&i>=0&&i<t().questions.length)goQuestion(i);}
+ else if('mode'in d&&(d.mode==='practice'||d.mode==='explore')){mode=d.mode;render('[data-mode="'+mode+'"]');}
+ else if('pick'in d){const a=attempt(),i=Number(d.pick);if(Number.isInteger(i)&&i>=0&&i<q().choices.length){a.picks=a.picks.includes(i)?a.picks.filter(x=>x!==i):q().correct.length===1?[i]:[...a.picks,i];a.feedback='';a.good=false;render('[data-pick="'+i+'"]');}}
  else if('check'in d)check();
  else if('hint'in d){attempt().hint=!attempt().hint;render('[data-hint]');}
  else if('solution'in d){attempt().reveal=!attempt().reveal;render('[data-solution]');}
  else if('next'in d){if(position[topic]+1<t().questions.length)goQuestion(position[topic]+1);else if(topic+1<topics.length){topic++;goQuestion(0);}else progress();}
  else if('guide'in d){page='guide';render();document.querySelector('.guide').scrollIntoView({block:'start'});}
  else if('work'in d)openWorkspace();
- else if('pair'in d){changeExplore('pair',d.pair);render('[data-pair="'+d.pair+'"]');}
+ else if('pair'in d){changeExplore('pair',d.pair);const escPair=typeof CSS!=='undefined'&&CSS.escape?CSS.escape(d.pair):d.pair;render('[data-pair="'+escPair+'"]');}
 });
 app.addEventListener('change',e=>{const c=e.target;
  if(c.hasAttribute('data-guided')){
@@ -78,7 +78,7 @@ app.addEventListener('change',e=>{const c=e.target;
   render('[data-guided]');
   return;
  }
- if(!c.dataset.field)return;changeExplore(c.dataset.field,c.value,c.checked);const s='[data-field="'+c.dataset.field+'"]'+(c.type==='checkbox'&&c.hasAttribute('value')?'[value="'+c.value+'"]':'');render(s);});
+ if(!c.dataset.field)return;changeExplore(c.dataset.field,c.value,c.checked);const escField=typeof CSS!=='undefined'&&CSS.escape?CSS.escape(c.dataset.field):c.dataset.field;const escVal=typeof CSS!=='undefined'&&CSS.escape?CSS.escape(c.value):c.value;const s='[data-field="'+escField+'"]'+(c.type==='checkbox'&&c.hasAttribute('value')?'[value="'+escVal+'"]':'');render(s);});
 $('progress').onclick=progress;$('close').onclick=()=>modal.close();modal.addEventListener('click',e=>{if(e.target===modal&&!(e.clientX>=modal.getBoundingClientRect().left&&e.clientX<=modal.getBoundingClientRect().right&&e.clientY>=modal.getBoundingClientRect().top&&e.clientY<=modal.getBoundingClientRect().bottom))modal.close();});
 wireGenerator(app);
 $('generate').addEventListener('click',event=>{

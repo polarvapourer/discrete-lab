@@ -5,16 +5,21 @@ const key = 'discrete-lab-term-test-v'+paperVersion;
 const view = document.getElementById('examView');
 const size = 20, logicCount = 14;
 let storageAvailable = true;
+const safeParse = raw => JSON.parse(raw, (k, v) => (k === '__proto__' || k === 'constructor' || k === 'prototype') ? undefined : v);
 function read() {
   if (!storageAvailable) return null;
   try {
-    const s=JSON.parse(localStorage.getItem(key));
+    const raw=localStorage.getItem(key);
+    if(!raw)return null;
+    const s=safeParse(raw);
     if (s && Number.isSafeInteger(s.seed) && s.seed>=0 && s.seed<=0xffffffff &&
-      Number.isFinite(s.deadline) && Number.isInteger(s.minutes) && s.minutes>0 && s.minutes<=240 &&
+      Number.isSafeInteger(s.deadline) && s.deadline>0 && Number.isInteger(s.minutes) && s.minutes>0 && s.minutes<=240 &&
       Number.isInteger(s.at) && s.at>=0 && s.at<size &&
       Array.isArray(s.answers) && s.answers.length===size && s.answers.every(x=>x===null || (Number.isInteger(x)&&x>=0&&x<4)) &&
       Array.isArray(s.flags) && s.flags.length===size && s.flags.every(x=>typeof x==='boolean') &&
-      ['active','submitted','expired'].includes(s.phase)) return s;
+      ['active','submitted','expired'].includes(s.phase)) {
+      return {seed:s.seed,minutes:s.minutes,deadline:s.deadline,phase:s.phase,at:s.at,answers:[...s.answers],flags:[...s.flags]};
+    }
   } catch { /* A browser with storage disabled can still run a paper. */ }
   return null;
 }
@@ -123,8 +128,12 @@ view.addEventListener('submit',event=>{
 });
 view.addEventListener('change',event=>{
   if(!state||state.phase!=='active'||!sync())return;
-  if(event.target.name==='answer') state.answers[state.at]=Number(event.target.value);
-  else if(event.target.id==='flagQuestion')state.flags[state.at]=event.target.checked;
+  if(event.target.name==='answer'){
+    const choice=Number(event.target.value);
+    if(!Number.isInteger(choice)||choice<0||choice>=4)return;
+    state.answers[state.at]=choice;
+  }
+  else if(event.target.id==='flagQuestion')state.flags[state.at]=Boolean(event.target.checked);
   else return;
   save();document.getElementById('answeredCount').textContent=countAnswers()+' of 20 answered';
   document.getElementById('examNav').children[state.at].outerHTML=navButton(state.at);
@@ -142,7 +151,11 @@ view.addEventListener('click',event=>{
   else if(act==='submit'&&confirming){state.phase='submitted';confirming=false;}
   else if(act==='next')state.at=Math.min(size-1,state.at+1);
   else if(act==='prev')state.at=Math.max(0,state.at-1);
-  else if(button.hasAttribute('data-jump'))state.at=Number(button.dataset.jump);
+  else if(button.hasAttribute('data-jump')){
+    const idx=Number(button.dataset.jump);
+    if(!Number.isInteger(idx)||idx<0||idx>=size)return;
+    state.at=idx;
+  }
   else return;
   save();render(true);
 });

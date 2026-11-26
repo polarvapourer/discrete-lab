@@ -3,16 +3,17 @@ import {defaultConfig,subjects,levels,generate,VERSION,configOK} from './generat
 import {figure,esc,icon} from './diagrams.js';
 import {guidanceCheckbox, guidanceEnabled} from './guided.js';
 const prefix='discrete-generated-v'+VERSION;
-const saved=(k)=>{try{return JSON.parse(localStorage.getItem(k));}catch{return null;}};
+const safeParse=raw=>JSON.parse(raw,(k,v)=>(k==='__proto__'||k==='constructor'||k==='prototype')?undefined:v);
+const saved=(k)=>{try{const raw=localStorage.getItem(k);return raw?safeParse(raw):null;}catch{return null;}};
 const persist=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
 const configKey=c=>JSON.stringify([c.subject,c.level,c.count,c.seed]);
 function restoreAttempt(question, saved){
  const choices=question.choices??[];
  return {
   picks:Array.isArray(saved?.picks)?choices.filter(choice=>saved.picks.includes(choice)):[],
-  input:typeof saved?.input==='string'?saved.input:'',
+  input:typeof saved?.input==='string'?saved.input.slice(0,64):'',
   solved:saved?.solved===true,
-  feedback:typeof saved?.feedback==='string'?saved.feedback:'',
+  feedback:typeof saved?.feedback==='string'?saved.feedback.slice(0,512):'',
   hint:saved?.hint===true,
   steps:Number.isInteger(saved?.steps)?Math.max(0,Math.min(question.steps.length,saved.steps)):0,
   open:saved?.open===true,
@@ -72,7 +73,7 @@ export function generatorView(redraw, guided=guidanceEnabled()){
  return '<div class="workspace"><div class="panel"><div class="panelhead"><span class="kicker">'+icon('pencil')+' Question generator</span></div><div class="panelbody">'+form()+confirm+(notice?'<p class="message" role="alert">'+esc(notice)+'</p>':'')+'</div></div><aside class="notes"><div class="notetitle">'+icon('book')+' How it works</div><h3>Mixed revision</h3><p>Topics rotate across sets, relations, functions and graphs. Mixed difficulty starts with shorter questions and moves on to ones with more steps.</p><h3>Practise together</h3><p>Share a seed and settings to get the same questions. Each student keeps their own answers and progress in their browser.</p></aside></div>';}
  return `<div class="sectionhead"><h2>Generated practice</h2><button class="secondary" data-gen="setup">Generate another set</button></div><div class="workspace">${question(guided)}<aside><div class="notes"><div class="notetitle">${icon('book')} Practice set</div><p class="generator-summary">${esc(cfg.subject)} · ${esc(cfg.level)}</p><p class="seed">Seed <code>${esc(cfg.seed)}</code></p><div class="switcher"><button data-gen="share">Copy question link</button><button data-gen="shareset">Copy set link</button></div><div class="switcher"><button data-gen="print">Print questions</button><button data-gen="answers">Print solutions</button></div><p id="shareStatus" aria-live="polite">${esc(notice)}</p></div>${navigation()}</aside></div>`;
 }
-function jump(i){stopPlayback();index=i;notice='';save();syncUrl();refresh();document.getElementById('genQuestion')?.focus({preventScroll:true});document.getElementById('genQuestion')?.scrollIntoView({block:'nearest'});}
+function jump(i){if(!Number.isInteger(i)||i<0||i>=deck.length)return;stopPlayback();index=i;notice='';save();syncUrl();refresh();document.getElementById('genQuestion')?.focus({preventScroll:true});document.getElementById('genQuestion')?.scrollIntoView({block:'nearest'});}
 function accept(c){
  try { load(c,0); }
  catch(error){
@@ -103,7 +104,7 @@ function check(){const q=deck[index],a=attempts[index];let correct=false;
 }
 function printSet(solutions){const el=document.createElement('section');el.id='printset';el.innerHTML='<h1>Discrete Lab · '+(solutions?'Worked solutions':'Practice questions')+'</h1><p>'+esc(cfg.subject)+' · '+esc(cfg.level)+' · Seed '+esc(cfg.seed)+'</p>'+deck.map((q,i)=>'<article><h2>'+(i+1)+'. '+esc(q.title)+'</h2><p>'+esc(q.prompt)+'</p>'+figure(q.figure)+(q.type==='selection'?'<p>Options: '+q.choices.map(esc).join(' · ')+'</p>':'')+(solutions?'<ol>'+q.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>':'<p>Answer: _____________________________________</p>')+'</article>').join('');document.body.append(el);window.addEventListener('afterprint',()=>el.remove(),{once:true});window.print();}
 export function wireGenerator(root){
- root.addEventListener('submit',e=>{if(e.target.id!=='generatorForm')return;e.preventDefault();const fd=new FormData(e.target),c={subject:fd.get('subject'),level:fd.get('level'),count:Number(fd.get('count')),seed:fd.get('seed').trim()||nativeSeed()};if(!configOK(c))return;
+ root.addEventListener('submit',e=>{if(e.target.id!=='generatorForm')return;e.preventDefault();const fd=new FormData(e.target),c={subject:fd.get('subject'),level:fd.get('level'),count:Number(fd.get('count')),seed:String(fd.get('seed')??'').trim()||nativeSeed()};if(!configOK(c))return;
  if(cfg&&configKey(cfg)!==configKey(c)){pending=c;formDraft=c;refresh();}else accept(c);});
  root.addEventListener('input',e=>{if(e.target.id==='generatedAnswer'){attempts[index].input=e.target.value;attempts[index].feedback='';root.querySelector('[aria-live="polite"] .message')?.remove();save();}});
  root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='generatedAnswer'){e.preventDefault();root.querySelector('[data-gen="check"]').click();}});
