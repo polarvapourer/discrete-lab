@@ -1,5 +1,6 @@
 // Each member is an integer or an unquoted word. Sets use value equality.
 export function readSet(text) {
+  if (typeof text !== 'string' || text.length > 2000) throw Error('Use at most 1,500 characters per set.');
   let value = text.trim();
   if (!value || value === '∅') return new Set();
   if (value.startsWith('{') && value.endsWith('}')) value = value.slice(1,-1).trim();

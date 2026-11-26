@@ -58,12 +58,13 @@ export function explore(topic){
  }
  return '<section class="panel explore"><div class="panelhead"><span class="kicker">Exploration</span></div><div class="panelbody"><h2>'+title+'</h2><p class="prompt">'+prompt+'</p>'+body+controls+'<output aria-live="polite" class="message good">'+result+'</output>'+calculator+pythonPanel(python)+'</div></section>';
 }
+const validPairs=new Set(['11','12','13','21','22','23','31','32','33']);
 function toggle(list,value){return list.includes(value)?list.filter(v=>v!==value):[...list,value];}
 export function changeExplore(field,value,checked){
- if(field==='pair')state.pairs=toggle(state.pairs,value);
- else if(field==='op')state.op=Number(value);
- else if(field==='A'||field==='B')state[field]=toggle(state[field],Number(value)).sort((a,b)=>a-b);
- else if(field==='edges')state.edges=toggle(state.edges,value);
- else if(field==='directed')state.directed=checked;
- else if(field.startsWith('map'))state.values[Number(field.slice(3))]=Number(value)+1;
+ if(field==='pair'&&validPairs.has(value))state.pairs=toggle(state.pairs,value);
+ else if(field==='op'){const op=Number(value);if(Number.isInteger(op)&&op>=0&&op<ops.length)state.op=op;}
+ else if(field==='A'||field==='B'){const n=Number(value);if(universe.includes(n))state[field]=toggle(state[field],n).sort((a,b)=>a-b);}
+ else if(field==='edges'&&graphOptions.includes(value))state.edges=toggle(state.edges,value);
+ else if(field==='directed')state.directed=Boolean(checked);
+ else if(field==='map0'||field==='map1'||field==='map2'){const idx=Number(field.slice(3)),target=Number(value);if(Number.isInteger(target)&&target>=0&&target<state.targets)state.values[idx]=target+1;}
 }

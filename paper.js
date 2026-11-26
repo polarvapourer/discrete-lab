@@ -29,20 +29,25 @@ function newSession(ids, style='study', guided=false, minutes=null) {
   };
 }
 
+const safeParse = raw => JSON.parse(raw, (k, v) => (k === '__proto__' || k === 'constructor' || k === 'prototype') ? undefined : v);
+
 function readState() {
   const linked = params.get('set')?.split(',');
   const ids = validIds(linked) ? linked : null;
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey));
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return ids ? newSession(ids) : null;
+    const saved = safeParse(raw);
     if (validIds(saved?.ids) && Number.isInteger(saved.index) && saved.index >= 0 &&
         saved.index < saved.ids.length && (!ids || saved.ids.join(',') === ids.join(','))) {
       const timed = saved.style === 'timed';
       if (!timed || (Number.isInteger(saved.minutes) && saved.minutes >= 1 && saved.minutes <= 180 &&
           Number.isSafeInteger(saved.deadline) && saved.deadline > 0)) {
         const attempts = new Map();
+        const savedAttempts = saved.attempts;
         for (const id of saved.ids) {
-          const previous = saved.attempts?.[id];
-          if (!previous) continue;
+          const previous = savedAttempts && typeof savedAttempts === 'object' && Object.hasOwn(savedAttempts, id) ? savedAttempts[id] : null;
+          if (!previous || typeof previous !== 'object') continue;
           const q = bank.get(id);
           attempts.set(q.id, {
             done:previous.done === true,
@@ -87,9 +92,17 @@ function chooseQuestions(topic, count) {
 }
 
 function start(form) {
-  const ids = chooseQuestions(form.get('topic'), Number(form.get('count'))).map(q => q.id);
+  const topic = form.get('topic');
+  if (topic !== 'Mixed revision' && !topics.includes(topic)) return;
+  const available = topic === 'Mixed revision' ? questions.length : questions.filter(q => q.topic === topic).length;
+  const count = Number(form.get('count'));
+  if (!Number.isInteger(count) || count < 1 || count > available) return;
   const style = form.get('style');
-  openPaper(newSession(ids, style, form.has('guided'), style === 'timed' ? Number(form.get('minutes')) : null));
+  if (style !== 'study' && style !== 'timed') return;
+  const minutes = style === 'timed' ? Number(form.get('minutes')) : null;
+  if (style === 'timed' && (!Number.isInteger(minutes) || minutes < 1 || minutes > 180)) return;
+  const ids = chooseQuestions(topic, count).map(q => q.id);
+  openPaper(newSession(ids, style, form.has('guided'), minutes));
 }
 
 function openPaper(session) {
@@ -141,7 +154,7 @@ function setupPage() {
     <aside class="notes"><div class="notetitle">Working by hand</div>
       <h3>Show how you got there</h3><p>Write the rule you use, show intermediate steps and give a specific counterexample when a claim fails. Draw and label any diagram the question asks for.</p>
       <h3>Check after your attempt</h3><p>Use the worked mark scheme to compare your reasoning and tick the criteria you met. These are original revision questions based on the module topics.</p>
-      <h3>Practising logic?</h3><p>For propositional logic and natural deduction, use <a href="https://sr123.github.io/box-proofs/">Dr Søren Riis’s Box Proofs app</a>.</p>
+      <h3>Practising logic?</h3><p>For propositional logic and natural deduction, use <a href="https://sr123.github.io/box-proofs/" rel="noopener noreferrer">Dr Søren Riis’s Box Proofs app</a>.</p>
     </aside>
   </div>`;
 }
@@ -324,6 +337,7 @@ function savePaperFile() {
   const download = document.createElement('a');
   download.href = url;
   download.download = 'discrete-lab-paper.json';
+  download.rel = 'noopener';
   download.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -332,7 +346,7 @@ async function openPaperFile(file) {
   if (!file) return;
   try {
     if (file.size > 4096) throw Error();
-    const data = JSON.parse(await file.text());
+    const data = safeParse(await file.text());
     if (!setup) return;
     if (data?.format !== 'discrete-lab-paper' || data.version !== 1 || !validIds(data.questions)) throw Error();
     openPaper(newSession(data.questions));
